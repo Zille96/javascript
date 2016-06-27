@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style> /* set the CSS */
+
+body { font: 12px Arial;}
+
+path {
+    stroke: steelblue;
+    stroke-width: 2;
+    fill: none;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: black;
+    stroke-width: 2;
+    shape-rendering: crispEdges;-->
+}
+
+</style>
+<body>
+
+<!-- load the d3.js library -->
+<script src="http://d3js.org/d3.v3.min.js"></script>
+
+<script>
+var margin = {top: 100, right: 40, bottom: 80, left: 100},
+    width = 1000 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom;
+
+//var parseDate = d3.time.format("%d-%m-%y").parse;
+  var x=d3.scale.ordinal().rangePoints([0,width]),
+ y = d3.scale.linear().range([height, 0]);
+
+var xAxis = d3.svg.axis().scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis().scale(y)
+    .orient("left");
+
+var color=d3.scale.category10().range(["orange","blue","green"]);
+var valueline = d3.svg.line()
+    .x(function(d) { return x(d.region); })
+    .y(function(d) { return y(d.vitamin); });
+
+var svg = d3.select("body")
+    .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        svg.append("text")
+            .attr("x", (width / 2))
+            .attr("y",0- margin.top/2)
+            .attr("text-anchor", "middle")
+            .style("font-size", "35px")
+            .style("font-family","cursive")
+            .style("color","red")
+            .text("Food consumption of different geographical regions");
+
+            svg.append("text")      // text label for the x axis
+          .attr("x",500 )
+          .attr("y",  470 )
+          .style("text-anchor", "middle")
+          .style("font-size", "30px")
+          .text("geographical regions");
+
+          svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x",0 - (height / 2))
+        .attr("y",0-(margin.left))
+        .attr("dy", "1em")
+        .style("font-size", "30px")
+        .style("text-anchor", "middle")
+        .text("food consumption ");
+
+
+// Get the data
+d3.json("filterout2.json", function(error, data) {
+   var xDomain=[];
+     xDomain.push("");
+    data.forEach(function(d) {
+        d.region=d.region;
+        xDomain.push(d.region);
+        d.fat = parseInt(d.fat);
+        d.protein = parseInt(d.protein);
+        d.carbo =parseInt(d.carbo);
+    });
+    color.domain(d3.keys(data[0]).filter(function(key){return key !== "region";}));
+
+     var interData = color.domain().map(function (name) {
+         console.log(name);
+          return {
+            name :name,
+            values:data.map(function(d){
+
+              return {region:d.region,vitamin:+d[name]};
+            })
+          };
+       });
+    // Scale the range of the data
+  //  console.log(vitamin);
+
+    x.domain(xDomain);
+    y.domain([0, d3.max(interData, function(d) { return d3.max(d.values,function(v){return v.vitamin;}); })]);
+
+
+
+
+    svg.append("g")         // Add the X Axis
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    svg.append("g")         // Add the Y Axis
+        .attr("class", "y axis")
+        .call(yAxis);
+
+        var result = svg.selectAll(".lines")
+        .data(interData).enter()
+        .append("g")
+        .attr("class","lines");
+
+        result.append("path")      // Add the valueline path.
+            .attr("class", "line")
+            .attr("d", function(d){return valueline(d.values);})
+            .style("stroke",function(d){return color(d.name)});
+            console.log(data[2].fat);
+            svg.append("text")
+		.attr("transform", "translate(" + (width) + "," + y(data[2].fat) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+    .style("font-size","15px")
+		.style("fill", "orange")
+		.text("fat");
+
+	svg.append("text")
+		.attr("transform", "translate(" + (width) + "," + y(data[2].carbo) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", "steelblue")
+      .style("font-size","15px")
+		.text("carbo");
+
+    svg.append("text")
+.attr("transform", "translate(" + (width-5) + "," + y(data[2].protein) + ")")
+.attr("dy", ".35em")
+.attr("text-anchor", "start")
+.style("fill", "green")
+  .style("font-size","15px")
+.text("protein");
+
+
+});
+
+</script>
+
+</script>
+</body>
+</html>
